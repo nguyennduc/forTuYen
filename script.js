@@ -1,265 +1,196 @@
-$(function()
-{
-    var playerTrack = $("#player-track");
-	var bgArtwork = $('#bg-artwork');
-	var bgArtworkUrl;
-	var albumName = $('#album-name');
-	var trackName = $('#track-name');
-	var albumArt = $('#album-art'),
-		sArea = $('#s-area'),
-		seekBar = $('#seek-bar'),
-		trackTime = $('#track-time'),
-		insTime = $('#ins-time'),
-		sHover = $('#s-hover'),
-		playPauseButton = $("#play-pause-button"),
-		i = playPauseButton.find('i'),
-		tProgress = $('#current-time'),
-		tTime = $('#track-length'),
-		seekT, seekLoc, seekBarPos, cM, ctMinutes, ctSeconds, curMinutes, curSeconds, durMinutes, durSeconds, playProgress, bTime, nTime = 0,
-		buffInterval = null, tFlag = false;
-	
-	var playPreviousTrackButton = $('#play-previous'), playNextTrackButton = $('#play-next'), currIndex = -1;
-	
-	var songs = [{
-		artist: "Gửi em",
-		name: "Anh ghét làm bạn",
-		url: "Musics/y2mate.com - Anh Ghét Làm Bạn Em Phan Mạnh Quỳnh HD Official MV.mp3",
-		picture: "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/img/_1.jpg"
-	}];
-	
-	function shuffle(a) {
-		var j, x, i;
-		for (i = a.length - 1; i > 0; i--) {
-			j = Math.floor(Math.random() * (i + 1));
-			x = a[i];
-			a[i] = a[j];
-			a[j] = x;
-		}
-		return a;
+let previous = document.querySelector('#pre');
+let play = document.querySelector('#play');
+let next = document.querySelector('#next');
+let title = document.querySelector('#title');
+let recent_volume= document.querySelector('#volume');
+let volume_show = document.querySelector('#volume_show');
+let slider = document.querySelector('#duration_slider');
+let show_duration = document.querySelector('#show_duration');
+let track_image = document.querySelector('#track_image');
+let auto_play = document.querySelector('#auto');
+let present = document.querySelector('#present');
+let total = document.querySelector('#total');
+let artist = document.querySelector('#artist');
+
+
+
+let timer;
+let autoplay = 0;
+
+let index_no = 0;
+let Playing_song = false;
+
+//create a audio Element
+let track = document.createElement('audio');
+
+
+//All songs list
+let All_song = [
+   {
+     name: "first song",
+     path: "music/song1.mp3",
+     img: "img/img1.jpg",
+     singer: "1"
+   },
+   {
+     name: "second song",
+     path: "music/song2.mp3",
+     img: "img/img2.jpg",
+     singer: "2"
+   },
+   {
+     name: "third song",
+     path: "music/song3.mp3",
+     img: "img/img3.jpg",
+     singer: "3"
+   },
+   {
+     name: "fourth song",
+     path: "music/song4.mp3",
+     img: "img/img4.jpg",
+     singer: "4"
+   },
+   {
+     name: "fifth song",
+     path: "music/song5.mp3",
+     img: "img/img5.jpg",
+     singer: "5"
+   }
+];
+
+
+// All functions
+
+
+// function load the track
+function load_track(index_no){
+	clearInterval(timer);
+	reset_slider();
+
+	track.src = All_song[index_no].path;
+	title.innerHTML = All_song[index_no].name;	
+	track_image.src = All_song[index_no].img;
+    artist.innerHTML = All_song[index_no].singer;
+    track.load();
+
+	timer = setInterval(range_slider ,1000);
+	total.innerHTML = All_song.length;
+	present.innerHTML = index_no + 1;
+}
+
+load_track(index_no);
+
+
+//mute sound function
+function mute_sound(){
+	track.volume = 0;
+	volume.value = 0;
+	volume_show.innerHTML = 0;
+}
+
+
+// checking.. the song is playing or not
+ function justplay(){
+ 	if(Playing_song==false){
+ 		playsong();
+
+ 	}else{
+ 		pausesong();
+ 	}
+ }
+
+
+// reset song slider
+ function reset_slider(){
+ 	slider.value = 0;
+ }
+
+// play song
+function playsong(){
+  track.play();
+  Playing_song = true;
+  play.innerHTML = '<i class="fa fa-pause" aria-hidden="true"></i>';
+}
+
+//pause song
+function pausesong(){
+	track.pause();
+	Playing_song = false;
+	play.innerHTML = '<i class="fa fa-play" aria-hidden="true"></i>';
+}
+
+
+// next song
+function next_song(){
+	if(index_no < All_song.length - 1){
+		index_no += 1;
+		load_track(index_no);
+		playsong();
+	}else{
+		index_no = 0;
+		load_track(index_no);
+		playsong();
+
 	}
-	songs = shuffle(songs);
+}
 
-    function playPause()
-    {
-        setTimeout(function()
-        {
-            if(audio.paused)
-            {
-                playerTrack.addClass('active');
-                albumArt.addClass('active');
-                checkBuffering();
-                i.attr('class','fas fa-pause');
-                audio.play();
-            }
-            else
-            {
-                playerTrack.removeClass('active');
-                albumArt.removeClass('active');
-                clearInterval(buffInterval);
-                albumArt.removeClass('buffering');
-                i.attr('class','fas fa-play');
-                audio.pause();
-            }
-        },300);
-    }
 
-    	
-	function showHover(event)
-	{
-		seekBarPos = sArea.offset(); 
-		seekT = event.clientX - seekBarPos.left;
-		seekLoc = audio.duration * (seekT / sArea.outerWidth());
-		
-		sHover.width(seekT);
-		
-		cM = seekLoc / 60;
-		
-		ctMinutes = Math.floor(cM);
-		ctSeconds = Math.floor(seekLoc - ctMinutes * 60);
-		
-		if( (ctMinutes < 0) || (ctSeconds < 0) )
-			return;
-		
-        if( (ctMinutes < 0) || (ctSeconds < 0) )
-			return;
-		
-		if(ctMinutes < 10)
-			ctMinutes = '0'+ctMinutes;
-		if(ctSeconds < 10)
-			ctSeconds = '0'+ctSeconds;
-        
-        if( isNaN(ctMinutes) || isNaN(ctSeconds) )
-            insTime.text('--:--');
-        else
-		    insTime.text(ctMinutes+':'+ctSeconds);
-            
-		insTime.css({'left':seekT,'margin-left':'-21px'}).fadeIn(0);
-		
+// previous song
+function previous_song(){
+	if(index_no > 0){
+		index_no -= 1;
+		load_track(index_no);
+		playsong();
+
+	}else{
+		index_no = All_song.length;
+		load_track(index_no);
+		playsong();
 	}
+}
 
-    function hideHover()
-	{
-        sHover.width(0);
-        insTime.text('00:00').css({'left':'0px','margin-left':'0px'}).fadeOut(0);		
-    }
-    
-    function playFromClickedPos()
-    {
-        audio.currentTime = seekLoc;
-		seekBar.width(seekT);
-		hideHover();
-    }
 
-    function updateCurrTime()
-	{
-        nTime = new Date();
-        nTime = nTime.getTime();
+// change volume
+function volume_change(){
+	volume_show.innerHTML = recent_volume.value;
+	track.volume = recent_volume.value / 100;
+}
 
-        if( !tFlag )
-        {
-            tFlag = true;
-            trackTime.addClass('active');
-        }
+// change slider position 
+function change_duration(){
+	slider_position = track.duration * (slider.value / 100);
+	track.currentTime = slider_position;
+}
 
-		curMinutes = Math.floor(audio.currentTime / 60);
-		curSeconds = Math.floor(audio.currentTime - curMinutes * 60);
-		
-		durMinutes = Math.floor(audio.duration / 60);
-		durSeconds = Math.floor(audio.duration - durMinutes * 60);
-		
-		playProgress = (audio.currentTime / audio.duration) * 100;
-		
-		if(curMinutes < 10)
-			curMinutes = '0'+curMinutes;
-		if(curSeconds < 10)
-			curSeconds = '0'+curSeconds;
-		
-		if(durMinutes < 10)
-			durMinutes = '0'+durMinutes;
-		if(durSeconds < 10)
-			durSeconds = '0'+durSeconds;
-        
-        if( isNaN(curMinutes) || isNaN(curSeconds) )
-            tProgress.text('00:00');
-        else
-		    tProgress.text(curMinutes+':'+curSeconds);
-        
-        if( isNaN(durMinutes) || isNaN(durSeconds) )
-            tTime.text('00:00');
-        else
-		    tTime.text(durMinutes+':'+durSeconds);
-        
-        if( isNaN(curMinutes) || isNaN(curSeconds) || isNaN(durMinutes) || isNaN(durSeconds) )
-            trackTime.removeClass('active');
-        else
-            trackTime.addClass('active');
-
-        
-		seekBar.width(playProgress+'%');
-		
-		if( playProgress == 100 )
-		{
-			i.attr('class','fa fa-play');
-			seekBar.width(0);
-            tProgress.text('00:00');
-            albumArt.removeClass('buffering').removeClass('active');
-            clearInterval(buffInterval);
-			selectTrack(1);
-		}
-    }
-    
-    function checkBuffering()
-    {
-        clearInterval(buffInterval);
-        buffInterval = setInterval(function()
-        { 
-            if( (nTime == 0) || (bTime - nTime) > 1000  )
-                albumArt.addClass('buffering');
-            else
-                albumArt.removeClass('buffering');
-
-            bTime = new Date();
-            bTime = bTime.getTime();
-
-        },100);
-    }
-
-    function selectTrack(flag)
-    {
-        if( flag == 0 || flag == 1 )
-            ++currIndex;
-        else
-            --currIndex;
-
-        if( (currIndex > -1) && (currIndex < songs.length) )
-        {
-            if( flag == 0 )
-                i.attr('class','fa fa-play');
-            else
-            {
-                albumArt.removeClass('buffering');
-                i.attr('class','fa fa-pause');
-            }
-
-            seekBar.width(0);
-            trackTime.removeClass('active');
-            tProgress.text('00:00');
-            tTime.text('00:00');
-			
-			currAlbum = songs[currIndex].name;
-            currTrackName = songs[currIndex].artist;
-            currArtwork = songs[currIndex].picture;
-
-            audio.src = songs[currIndex].url;
-            
-            nTime = 0;
-            bTime = new Date();
-            bTime = bTime.getTime();
-
-            if(flag != 0)
-            {
-                audio.play();
-                playerTrack.addClass('active');
-                albumArt.addClass('active');
-            
-                clearInterval(buffInterval);
-                checkBuffering();
-            }
-
-            albumName.text(currAlbum);
-            trackName.text(currTrackName);
-            $('#album-art img').prop('src', bgArtworkUrl);
-        }
-        else
-        {
-            if( flag == 0 || flag == 1 )
-                --currIndex;
-            else
-                ++currIndex;
-        }
-    }
-
-    function initPlayer()
-	{	
-        audio = new Audio();
-
-		selectTrack(0);
-		
-		audio.loop = false;
-		
-		playPauseButton.on('click',playPause);
-		
-		sArea.mousemove(function(event){ showHover(event); });
-		
-        sArea.mouseout(hideHover);
-        
-        sArea.on('click',playFromClickedPos);
-		
-        $(audio).on('timeupdate',updateCurrTime);
-
-        playPreviousTrackButton.on('click',function(){ selectTrack(-1);} );
-        playNextTrackButton.on('click',function(){ selectTrack(1);});
+// autoplay function
+function autoplay_switch(){
+	if (autoplay==1){
+       autoplay = 0;
+       auto_play.style.background = "rgba(255,255,255,0.2)";
+	}else{
+       autoplay = 1;
+       auto_play.style.background = "#FF8A65";
 	}
-    
-	initPlayer();
-});
+}
+
+
+function range_slider(){
+	let position = 0;
+        
+        // update slider position
+		if(!isNaN(track.duration)){
+		   position = track.currentTime * (100 / track.duration);
+		   slider.value =  position;
+	      }
+
+       
+       // function will run when the song is over
+       if(track.ended){
+       	 play.innerHTML = '<i class="fa fa-play" aria-hidden="true"></i>';
+           if(autoplay==1){
+		       index_no += 1;
+		       load_track(index_no);
+		       playsong();
+           }
+	    }
+     }
