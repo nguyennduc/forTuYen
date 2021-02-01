@@ -1,196 +1,297 @@
-let previous = document.querySelector('#pre');
-let play = document.querySelector('#play');
-let next = document.querySelector('#next');
-let title = document.querySelector('#title');
-let recent_volume= document.querySelector('#volume');
-let volume_show = document.querySelector('#volume_show');
-let slider = document.querySelector('#duration_slider');
-let show_duration = document.querySelector('#show_duration');
-let track_image = document.querySelector('#track_image');
-let auto_play = document.querySelector('#auto');
-let present = document.querySelector('#present');
-let total = document.querySelector('#total');
-let artist = document.querySelector('#artist');
+
+const apiKeyList = ["AIzaSyAKkNJJh2kbSgl31RObQuuEaS_6oRzT30Q", "AIzaSyAvPUsjjqCxjx9ZlIZh-EcdiBAFbJOeoO0", "AIzaSyB56E3cgBh0TMpNi5WQJT9AMFtChFIeEIo"];
+var apiKey = apiKeyList[0];
+var listVid = [];
+var listVideo;
+var player;
+
+var bg = document.getElementsByClassName('bg')[0];
+var musicPlayer = document.getElementsByClassName('player')[0];
+var prev = document.getElementsByClassName('btn-prev')[0];
+var next = document.getElementsByClassName('btn-next')[0];
+var repeat = document.getElementsByClassName('btn-repeat')[0];
+var form = document.getElementsByClassName('form')[0];
+var newPlaylistId = document.getElementsByClassName('input')[0];
+var ok = document.getElementsByClassName('ok')[0];
+var body = document.getElementsByTagName('body')[0];
+
+var tag = document.createElement('script');
+var btn = document.getElementById('btn');
+var btn2 = document.getElementById('btn2');
+var icon = document.getElementById('icon');
+var icon2 = document.getElementById('icon2');
+var para = document.getElementById('title');
+
+var rand;
+var repeatStatus = 0;
+
+//Request Playlist Item
+const getPlayListItems = async playlistID => {
+	var token;
+	var resultArr = [];
+    const result = await axios.get(`https://www.googleapis.com/youtube/v3/playlistItems`, {
+      params: {
+        part: 'id,snippet',
+        maxResults: 50,
+        playlistId: playlistID,
+        key: apiKey
+      }
+    })
+    //Get NextPage Token
+	token = result.data.nextPageToken;
+	resultArr.push(result.data);
+	while (token) {
+		let result = await axios.get(`https://www.googleapis.com/youtube/v3/playlistItems`, {
+      	params: {
+        part: 'id,snippet',
+        maxResults: 50,
+        playlistId: playlistID,
+        key: apiKey,
+		pageToken: token
+      	}
+    	})
+		token = result.data.nextPageToken;
+		resultArr.push(result.data);
+	}	
+	return resultArr;
+};
+
+//Get Title video and videoId
+getPlayListItems("UUWovDkXc7w0821EaKmznmCA")
+.then(data => {
+	data.forEach(item => {
+    	item.items.forEach(i => listVid.push({title: i.snippet.title, idVid: i.snippet.resourceId.videoId}));
+	});
+	//create random index
+    rand = Math.floor(Math.random()*listVid.length);
+    checkPrivate();
+    tag.src = "https://www.youtube.com/iframe_api";
+	var firstScriptTag = document.getElementsByTagName('script')[0];
+	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+})
+.catch(err => {
+	changeAPIKey(apiKeyList[1], err);
+});
 
 
+function changeAPIKey(newKey, err) {
+	if (err.response.data.error.errors[0].reason == "dailyLimitExceeded") {
+		apiKey = newKey;
+		getPlayListItems("UUWovDkXc7w0821EaKmznmCA")
+		.then(data => {
+			data.forEach(item => {
+	    	item.items.forEach(i => listVid.push({title: i.snippet.title, idVid: i.snippet.resourceId.videoId}));
+			
+			rand = Math.floor(Math.random()*listVid.length);
+		    checkPrivate();
+		    tag.src = "https://www.youtube.com/iframe_api";
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+		});
+		})
+		.catch(err => {
+			changeAPIKey(apiKeyList[2], err);
+		});
 
-let timer;
-let autoplay = 0;
-
-let index_no = 0;
-let Playing_song = false;
-
-//create a audio Element
-let track = document.createElement('audio');
-
-
-//All songs list
-let All_song = [
-   {
-     name: "first song",
-     path: "Musics/y2mate.com - Anh Ghét Làm Bạn Em Phan Mạnh Quỳnh HD Official MV.mp3",
-     img: "img/img1.jpg",
-     singer: "Đức Nguyễn"
-   },
-   {
-     name: "second song",
-     path: "music/song2.mp3",
-     img: "img/img2.jpg",
-     singer: "2"
-   },
-   {
-     name: "third song",
-     path: "music/song3.mp3",
-     img: "img/img3.jpg",
-     singer: "3"
-   },
-   {
-     name: "fourth song",
-     path: "music/song4.mp3",
-     img: "img/img4.jpg",
-     singer: "4"
-   },
-   {
-     name: "fifth song",
-     path: "music/song5.mp3",
-     img: "img/img5.jpg",
-     singer: "5"
-   }
-];
-
-
-// All functions
-
-
-// function load the track
-function load_track(index_no){
-	clearInterval(timer);
-	reset_slider();
-
-	track.src = All_song[index_no].path;
-	title.innerHTML = All_song[index_no].name;	
-	track_image.src = All_song[index_no].img;
-    artist.innerHTML = All_song[index_no].singer;
-    track.load();
-
-	timer = setInterval(range_slider ,1000);
-	total.innerHTML = All_song.length;
-	present.innerHTML = index_no + 1;
-}
-
-load_track(index_no);
-
-
-//mute sound function
-function mute_sound(){
-	track.volume = 0;
-	volume.value = 0;
-	volume_show.innerHTML = 0;
-}
-
-
-// checking.. the song is playing or not
- function justplay(){
- 	if(Playing_song==false){
- 		playsong();
-
- 	}else{
- 		pausesong();
- 	}
- }
-
-
-// reset song slider
- function reset_slider(){
- 	slider.value = 0;
- }
-
-// play song
-function playsong(){
-  track.play();
-  Playing_song = true;
-  play.innerHTML = '<i class="fa fa-pause" aria-hidden="true"></i>';
-}
-
-//pause song
-function pausesong(){
-	track.pause();
-	Playing_song = false;
-	play.innerHTML = '<i class="fa fa-play" aria-hidden="true"></i>';
-}
-
-
-// next song
-function next_song(){
-	if(index_no < All_song.length - 1){
-		index_no += 1;
-		load_track(index_no);
-		playsong();
-	}else{
-		index_no = 0;
-		load_track(index_no);
-		playsong();
-
+		
 	}
 }
 
 
-// previous song
-function previous_song(){
-	if(index_no > 0){
-		index_no -= 1;
-		load_track(index_no);
-		playsong();
+function onYouTubeIframeAPIReady() {
+	player = new YT.Player('player', {
+	  height: '0',
+	  width: '0',
+	  videoId: listVid[rand].idVid,
+	  events: {
+	    'onReady': onPlayerReady,
+	    'onStateChange': onPlayerStateChange
+	  }
+	});
+}
 
-	}else{
-		index_no = All_song.length;
-		load_track(index_no);
-		playsong();
+function onPlayerReady(event) {
+	player.setPlaybackQuality("small");
+	btn.style.display = "block";
+	prev.style.display = "block";
+	next.style.display = "block";
+	btn2.style.display = "block";
+	repeat.style.display = "block";
+	form.style.display = "flex";
+	para.innerHTML = listVid[rand].title;
+	playButton(player.getPlayerState() !== 5);
+}
+
+//On click button
+btn.onclick = changeStatusPlay;
+prev.onclick = prevSong;
+next.onclick = nextSong;
+repeat.onclick = repeatVideo;
+ok.onclick = changePlaylistId;
+
+function playButton(play) {
+		icon.src = play ? "icon/pause.svg" : "icon/play.svg";
+}
+
+function changeStatusPlay() {
+	if (player.getPlayerState() == 1 || player.getPlayerState() == 3) {
+		pauseVideo();
+		playButton(false);
+	} else if (player.getPlayerState() != 0) {
+		playVideo();
+    	playButton(true);
+    	
+    } 
+}
+
+function onPlayerStateChange(event) {
+    if (event.data === 0) {
+    	playButton(false); 
+    }
+}
+
+function playVideo() {
+	player.playVideo();
+}
+
+function pauseVideo() {
+	player.pauseVideo();
+}
+
+function stopVideo() {
+	player.stopVideo();
+}
+
+//previous song
+function prevSong() {
+	if (repeatStatus == 1) {
+		repeat.style.opacity = "0.3";
+		repeatStatus = 0;
+	}
+	playButton(false);
+	stopVideo();
+	if (rand - 1 < 0) {
+		rand = listVid.length - 1;
+	} else {
+		rand -= 1;
+	}
+	checkPrivateBack();
+	player.loadVideoById({videoId:listVid[rand].idVid});
+	para.innerHTML = listVid[rand].title;
+	musicPlayer.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+	bg.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+	playButton(true);			
+}
+
+//next song
+function nextSong() {
+	if (repeatStatus == 1) {
+		repeat.style.opacity = "0.3";
+		repeatStatus = 0;
+	}
+	playButton(false);
+	stopVideo();
+	if (rand + 1 == listVid.length) {
+		rand = 0;
+	} else {
+		rand += 1;
+	}
+	checkPrivate();
+	player.loadVideoById({videoId:listVid[rand].idVid});
+	para.innerHTML = listVid[rand].title;
+	musicPlayer.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+	bg.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+	playButton(true);
+
+}
+
+// on Song end
+function nextVideo() {
+	if (repeatStatus == 1) {
+		player.loadVideoById({videoId:listVid[rand].idVid});
+	} else {
+		rand = Math.round(Math.random()*listVid.length);
+		checkPrivate();
+		player.loadVideoById({videoId:listVid[rand].idVid});
+		para.innerHTML = listVid[rand].title;
+		musicPlayer.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+		bg.style.backgroundImage = `url('https://source.unsplash.com/random/600*250/?landscape${rand}')`;
+	}
+	
+}
+
+//Repeat
+function repeatVideo () {
+	if (repeatStatus == 0) {
+		repeat.style.opacity = "0.8";
+		repeatStatus = 1;
+	} else {
+		repeat.style.opacity = "0.3";
+		repeatStatus = 0;
 	}
 }
 
-
-// change volume
-function volume_change(){
-	volume_show.innerHTML = recent_volume.value;
-	track.volume = recent_volume.value / 100;
-}
-
-// change slider position 
-function change_duration(){
-	slider_position = track.duration * (slider.value / 100);
-	track.currentTime = slider_position;
-}
-
-// autoplay function
-function autoplay_switch(){
-	if (autoplay==1){
-       autoplay = 0;
-       auto_play.style.background = "rgba(255,255,255,0.2)";
-	}else{
-       autoplay = 1;
-       auto_play.style.background = "#FF8A65";
+//Check private or deleted video
+function checkPrivate() {
+	if (listVid[rand].title == "Private video" || listVid[rand].title == "Deleted video") {
+		if (rand == listVid.length - 1) {
+			rand = 0;
+		} else {
+			rand += 1;
+		}
+		checkPrivate();
 	}
+};
+
+function checkPrivateBack() {
+	if (listVid[rand].title == "Private video" || listVid[rand].title == "Deleted video") {
+		if (rand == 0) {
+			rand = listVid.length - 1;
+		} else {
+			rand -= 1;
+		}		
+		checkPrivateBack();
+	}
+};
+
+//on New Playlist
+function changePlaylistId () {
+	var newId = newPlaylistId.value;
+	if (newId == "") {
+		return;
+	}
+
+	listVid = [];
+	btn.style.display = "none";
+	prev.style.display = "none";
+	next.style.display = "none";
+	btn2.style.display = "none";
+	repeat.style.display = "none";
+	para.innerHTML = "Loading...";
+
+	getPlayListItems(newId)
+	.then(data => {
+		data.forEach(item => {
+	    	item.items.forEach(i => listVid.push({title: i.snippet.title, idVid: i.snippet.resourceId.videoId}));
+		});
+	    rand = Math.floor(Math.random()*listVid.length);
+	    checkPrivate();
+	    btn.style.display = "block";
+		prev.style.display = "block";
+		next.style.display = "block";
+		btn2.style.display = "block";
+		repeat.style.display = "block";
+		para.innerHTML = listVid[rand].title;			    
+		player.loadVideoById({videoId:listVid[rand].idVid});
+		playButton(true);
+	});	
+
 }
 
-
-function range_slider(){
-	let position = 0;
-        
-        // update slider position
-		if(!isNaN(track.duration)){
-		   position = track.currentTime * (100 / track.duration);
-		   slider.value =  position;
-	      }
-
-       
-       // function will run when the song is over
-       if(track.ended){
-       	 play.innerHTML = '<i class="fa fa-play" aria-hidden="true"></i>';
-           if(autoplay==1){
-		       index_no += 1;
-		       load_track(index_no);
-		       playsong();
-           }
-	    }
-     }
+//Check song end
+setInterval(function() {
+	if (player.getPlayerState() == 0) {
+		nextVideo();
+		playButton(true);
+	}
+}, 3000);
