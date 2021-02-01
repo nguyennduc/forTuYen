@@ -28,9 +28,9 @@ let track = document.createElement('audio');
 let All_song = [
    {
      name: "first song",
-     path: "music/song1.mp3",
+     path: "Musics/y2mate.com - Anh Ghét Làm Bạn Em Phan Mạnh Quỳnh HD Official MV.mp3",
      img: "img/img1.jpg",
-     singer: "1"
+     singer: "Đức Nguyễn"
    },
    {
      name: "second song",
