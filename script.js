@@ -21,9 +21,9 @@ $(function()
 	var playPreviousTrackButton = $('#play-previous'), playNextTrackButton = $('#play-next'), currIndex = -1;
 	
 	var songs = [{
-		artist: "Dig Didzay",
-		name: "Nếu Anh Đi (Cover)",
-		url: "Musics/NeuAnhDi.mp3",
+		artist: "Gửi em",
+		name: "Anh ghét làm bạn",
+		url: "Musics/y2mate.com - Anh Ghét Làm Bạn Em Phan Mạnh Quỳnh HD Official MV.mp3",
 		picture: "https://raw.githubusercontent.com/himalayasingh/music-player-1/master/img/_1.jpg"
 	}];
 	
