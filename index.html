@@ -1,63 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>music player</title>
-    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=0.5, minimum-scale=0.5, width=device-width" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Lofi</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet">
 </head>
-
 <body>
+	<div class="switch">
+		<button id="btn2"><img src="icon/menu.svg" id="icon2"></button>
+		
+	</div>
+	<div class="form">
+			<input class="input" type="text" onfocus="this.value= ''" placeholder="New Playlist ID">
+			<button class="ok"><img src="icon/check.svg"></button>
+	</div>
+	<div class="bg">
+		<div class="color"></div>
+	</div>
+	<div id="player"></div>
+	<div class="player">
+		<div class="layer">
+			<div class="prev">
+				<button class="btn-prev"><img src="icon/prev.svg"></button>
+			</div>
+			<div class="play">
+				<button id="btn"><img src="icon/play.svg" id="icon"></button>
+			</div>
 
-  <div class="main">
-  	<p id="logo"><i class="fa fa-music"></i>Music</p>
-    
-    <!--- left part --->
-     <div class="left">
+			<div class="next">
+				<button class="btn-next"><img src="icon/next.svg"></button>
+			</div>
+			<div class="repeat">
+				<button class="btn-repeat"><img src="icon/repeat.svg"></button>
+			</div>
+			<div class="title" id="title"></div>
+			
+		</div>
 
-      <!--- song img --->
-      <img id="track_image">
-         <div class="volume">
-            <p id="volume_show">90</p>
-            <i class="fa fa-volume-up" aria-hidden="true" onclick="mute_sound()" id="volume_icon"></i>
-            <input type="range" min="0" max="100" value="90" onchange="volume_change()" id="volume">  
-         </div>
+	</div>
+	
 
-     </div>
- 
-
-     <!--- right part --->
-  	 <div class="right">
-
-        <div class="show_song_no">
-          <p id="present">1</p>
-          <p>/</p>
-          <p id="total">5</p>
-        </div>
-
-       <!--- song title & artist name --->
-      <p id="title">title.mp3</p>
-      <p id="artist">Artist name</p>
-
-      <!--- middle part --->
-  	 	<div class="middle">
-  	       <button onclick="previous_song()" id="pre"><i class="fa fa-step-backward" aria-hidden="true"></i></button>
-      	   <button onclick="justplay()" id="play"><i class="fa fa-play" aria-hidden="true"></i></button>
-  	       <button onclick="next_song()" id="next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
-  	   </div>
-
-       <!--- song duration part --->
-        <div class="duration">
-           <input type="range" min="0" max="100" value="0" id="duration_slider" onchange="change_duration()">
-        </div>
-           <button id="auto" onclick="autoplay_switch()">Auto play <i class="fa fa-circle-o-notch" aria-hidden="true"></i></button>
-  	</div>
-
-
-  </div>
-   
-  <!--- Add javascript file --->
-  <script src="script.js"></script>
-
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
