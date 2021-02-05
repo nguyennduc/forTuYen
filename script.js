@@ -57,7 +57,7 @@ const getPlayListItems = async playlistID => {
 };
 
 //Get Title video and videoId
-getPlayListItems("PLGdD6iqjZUBSufylkhZrWY-ftezp-LAJP")
+getPlayListItems("PLyVkrdO-dSqg3dAv6lWu055RORPOsJSK8")
 .then(data => {
 	data.forEach(item => {
     	item.items.forEach(i => listVid.push({title: i.snippet.title, idVid: i.snippet.resourceId.videoId}));
@@ -77,7 +77,7 @@ getPlayListItems("PLGdD6iqjZUBSufylkhZrWY-ftezp-LAJP")
 function changeAPIKey(newKey, err) {
 	if (err.response.data.error.errors[0].reason == "dailyLimitExceeded") {
 		apiKey = newKey;
-		getPlayListItems("PLGdD6iqjZUBSufylkhZrWY-ftezp-LAJP")
+		getPlayListItems("PLyVkrdO-dSqg3dAv6lWu055RORPOsJSK8")
 		.then(data => {
 			data.forEach(item => {
 	    	item.items.forEach(i => listVid.push({title: i.snippet.title, idVid: i.snippet.resourceId.videoId}));
